@@ -56,8 +56,10 @@ const orders = [
  * @returns {Object|null} - 回傳產品物件，找不到回傳 null
  */
 function getProductById(products, productId) {
-  // 請實作此函式
+  return products.find(product => product.id === productId) || null;
 }
+
+
 
 /**
  * 2. 根據分類篩選產品
@@ -66,7 +68,10 @@ function getProductById(products, productId) {
  * @returns {Array} - 回傳符合分類的產品陣列，若 category 為 '全部' 則回傳全部產品
  */
 function getProductsByCategory(products, category) {
-  // 請實作此函式
+    if (category === '全部') {
+    return products;
+  }
+  return products.filter(product => product.category === category);
 }
 
 /**
@@ -77,6 +82,7 @@ function getProductsByCategory(products, category) {
  */
 function getDiscountRate(product) {
   // 請實作此函式
+  return Math.round((product.price / product.origin_price) * 100) / 10 + '折';
 }
 
 /**
@@ -86,7 +92,10 @@ function getDiscountRate(product) {
  */
 function getAllCategories(products) {
   // 請實作此函式
+  const categories = products.map(product => product.category);
+  return [...new Set(categories)];
 }
+
 
 // ========================================
 // 任務二：購物車計算模組 (中階)
@@ -99,6 +108,7 @@ function getAllCategories(products) {
  */
 function calculateCartOriginalTotal(carts) {
   // 請實作此函式
+  return carts.reduce((total, cart) => total + cart.product.origin_price * cart.quantity, 0);
 }
 
 /**
@@ -108,7 +118,9 @@ function calculateCartOriginalTotal(carts) {
  */
 function calculateCartTotal(carts) {
   // 請實作此函式
+  return carts.reduce((total, cart) => total + cart.product.price * cart.quantity, 0);
 }
+
 
 /**
  * 3. 計算總共省下多少錢
@@ -117,6 +129,7 @@ function calculateCartTotal(carts) {
  */
 function calculateSavings(carts) {
   // 請實作此函式
+  return calculateCartOriginalTotal(carts) - calculateCartTotal(carts);
 }
 
 /**
@@ -126,6 +139,7 @@ function calculateSavings(carts) {
  */
 function calculateCartItemCount(carts) {
   // 請實作此函式
+  return carts.reduce((total, cart) => total + cart.quantity, 0);
 }
 
 /**
@@ -136,6 +150,7 @@ function calculateCartItemCount(carts) {
  */
 function isProductInCart(carts, productId) {
   // 請實作此函式
+  return carts.some(cart=> cart.product.id === productId);
 }
 
 // ========================================
@@ -152,6 +167,17 @@ function isProductInCart(carts, productId) {
  */
 function addToCart(carts, product, quantity) {
   // 請實作此函式
+  const findProductIndex = carts.findIndex(cart => cart.product.id === product.id);
+  if (findProductIndex !== -1) {
+    const newCarts = [...carts];
+    newCarts[findProductIndex] = {
+      ...newCarts[findProductIndex],
+      quantity: newCarts[findProductIndex].quantity + quantity
+    };
+    return newCarts;
+  } else {
+    return [...carts, { product, quantity }];
+  }
 }
 
 /**
@@ -163,7 +189,17 @@ function addToCart(carts, product, quantity) {
  */
 function updateCartItemQuantity(carts, cartId, newQuantity) {
   // 請實作此函式
-}
+  if (newQuantity <= 0) {
+    return carts.filter(cart => cart.id !== cartId);
+  }
+  return carts.map(cart => {
+    if (cart.id === cartId) {
+      return { ...cart, quantity: newQuantity };
+    } else {
+      return cart;
+    }
+  });
+} 
 
 /**
  * 3. 從購物車移除商品
@@ -173,6 +209,7 @@ function updateCartItemQuantity(carts, cartId, newQuantity) {
  */
 function removeFromCart(carts, cartId) {
   // 請實作此函式
+  return carts.filter(cart => cart.id !== cartId);
 }
 
 /**
@@ -181,7 +218,8 @@ function removeFromCart(carts, cartId) {
  */
 function clearCart() {
   // 請實作此函式
-}
+  return [];
+} 
 
 // ========================================
 // 任務四：訂單統計模組 (挑戰)
@@ -194,7 +232,10 @@ function clearCart() {
  */
 function calculateTotalRevenue(orders) {
   // 請實作此函式
+  return orders.filter(order => order.paid)
+  .reduce((total, order) => total + order.total, 0);
 }
+
 
 /**
  * 2. 篩選訂單狀態
@@ -204,7 +245,8 @@ function calculateTotalRevenue(orders) {
  */
 function filterOrdersByStatus(orders, isPaid) {
   // 請實作此函式
-}
+  return orders.filter(order => order.paid === isPaid);
+  }
 
 /**
  * 3. 產生訂單統計報表
@@ -220,7 +262,19 @@ function filterOrdersByStatus(orders, isPaid) {
  */
 function generateOrderReport(orders) {
   // 請實作此函式
-}
+  const totalOrders = orders.length;
+  const paidOrders = orders.filter(order => order.paid).length;
+  const unpaidOrders = totalOrders - paidOrders;
+  const totalRevenue = calculateTotalRevenue(orders);
+  const averageOrderValue = totalOrders > 0 ? Math.round(orders.reduce((sum, order) => sum + order.total, 0) / totalOrders) : 0;
+  return {
+    totalOrders,
+    paidOrders,
+    unpaidOrders,
+    totalRevenue,
+    averageOrderValue
+  };
+} 
 
 /**
  * 4. 依付款方式統計
@@ -233,6 +287,14 @@ function generateOrderReport(orders) {
  */
 function groupOrdersByPayment(orders) {
   // 請實作此函式
+  return orders.reduce((grouped, order) => {
+    const paymentMethod = order.user.payment;
+    if (!grouped[paymentMethod]) {
+      grouped[paymentMethod] = [];
+    }
+    grouped[paymentMethod].push(order);
+    return grouped;
+  }, {}); 
 }
 
 // ========================================
